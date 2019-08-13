@@ -2,6 +2,7 @@
 version: '3'
 services:
   # IBM MQ
+  # doc https://github.com/ibm-messaging/mq-container/blob/master/docs/developer-config.md
   ibm-mq:
     image: ibmcom/mq:9
     environment:

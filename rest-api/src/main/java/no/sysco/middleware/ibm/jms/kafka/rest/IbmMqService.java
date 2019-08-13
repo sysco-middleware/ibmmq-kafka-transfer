@@ -114,7 +114,7 @@ public class IbmMqService {
     logger.info("destination created");
     producer = context.createProducer();
     logger.info("producer created");
-    for (int i = 1; i <= 10; i++) {
+    for (int i = 1; i <= 1000; i++) {
       TextMessage message = context.createTextMessage("This is message number " + i + ".");
       producer.send(destination, message);
     }

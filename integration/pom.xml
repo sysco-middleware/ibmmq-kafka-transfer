@@ -12,4 +12,18 @@
   <artifactId>integration</artifactId>
 
 
+  <dependencies>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm.mq</groupId>
+      <artifactId>com.ibm.mq.allclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+    </dependency>
+  </dependencies>
 </project>
