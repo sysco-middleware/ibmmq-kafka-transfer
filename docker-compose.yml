@@ -1,31 +1,64 @@
 ---
-version: '3'
+version: "3"
 services:
-  # IBM MQ
-  # doc https://github.com/ibm-messaging/mq-container/blob/master/docs/developer-config.md
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.1.1
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:5.1.1
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    depends_on:
+      - zookeeper
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.1.1
+    ports:
+      - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: localhost
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+    depends_on:
+      - kafka
+
   ibm-mq:
     image: ibmcom/mq:9
     environment:
       LICENSE: accept
       MQ_QMGR_NAME: QM1
-      #      Prometheus metrics, exposed on :9157/metrics
       MQ_ENABLE_METRICS: "true"
       MQ_APP_PASSWORD: "passw0rd"
     ports:
       - 1414:1414
       - 9443:9443
       - 9157:9157
-#    volumes:
-#      - mq-data:/mnt/mqm
 
-  kafka:
-    image: landoop/fast-data-dev
+  cancel-bet-response-transfer:
+    image: norsk-tipping/cancel-bet-response-transfer:0.0.1
+    build: .
     environment:
-      ADV_HOST: localhost    # Change to 192.168.99.100 if using Docker Toolbox or leave localhost
-      RUNTESTS: 0                 # Disable Running tests so the cluster starts faster
+      BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      TOPIC_NAME: topic-5
+      IBM_MQ_HOST: ibm-mq
     ports:
-      - "2181:2181"                 # Zookeeper
-      - "3030:3030"                 # Landoop UI
-      - "8081-8083:8081-8083"       # REST Proxy, Schema Registry, Kafka Connect ports
-      - "9581-9585:9581-9585"       # JMX Ports
-      - "9092:9092"                 # Kafka Broker
+      - 9999:8080
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
